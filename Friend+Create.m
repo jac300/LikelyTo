@@ -112,4 +112,49 @@
     
 }
 
++ (NSArray *)questionsFormattedForPosting
+{
+    NSArray *questions = [[NSArray alloc]initWithObjects:
+                          @ "pick out my clothes every day",
+                          @ "sing karaoke",
+                          @ "drive across country",
+                          @ "split my lottery winnings",
+                          @ "switch lives with me",
+                          @ "crash a wedding",
+                          @ "fight crime",
+                          @ "enter a pie eating contest",
+                          @ "go on a bucket list adventure",
+                          @ "inspire a novel",
+                          @ "cut my hair",
+                          @ "star on a reality show",
+                          @ "get a tattoo",
+                          @ "set me up on a blind date",
+                          @ "time travel",
+                          @ "write my status updates",
+                          @ "be my partner on a game show",
+                          @ "read my diary",
+                          @ "confess a crime to",
+                          @ "choose to be stranded on a desert island",
+                          nil];
+    return questions;
+}
+
+
++(NSArray *)questionKeys
+{
+    NSArray *questionKeys = [[NSArray alloc]initWithObjects:
+                             CLOTHES, KAREOKE, DRIVE, LOTTERY, SWITCH_LIVES, WEDDING, FIGHT_CRIME, PIE_EATING, BUCKET_LIST, NOVEL, HAIRCUT, REALITY_SHOW, TATOO, BLIND_DATE, TIME_TRAVEL, STATUS_UPDATE, GAME_SHOW, DIARY, CONFESS_CRIME, ISLAND
+                             , nil];
+    return questionKeys;
+}
+
+
++ (NSDictionary *)questionsAndQuestionKeys
+{
+    NSDictionary *dictionary = [[NSDictionary alloc]initWithObjects:[self questionsFormattedForPosting] forKeys:[self questionKeys]];
+    
+    return dictionary;
+}
+
+
 @end

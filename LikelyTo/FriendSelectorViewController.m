@@ -18,9 +18,9 @@
 @interface FriendSelectorViewController () <FacebookCallHandler>
 
 @property (weak, nonatomic) IBOutlet UIImageView *backgroundView;
-@property (weak, nonatomic) IBOutlet UIImageView *friendOneView;
-@property (weak, nonatomic) IBOutlet UIImageView *friendTwoView;
-@property (weak, nonatomic) IBOutlet UIImageView *friendThreeView;
+@property (weak, nonatomic) UIImageView *friendOneView; //delete
+@property (weak, nonatomic) UIImageView *friendTwoView; //delete
+@property (weak, nonatomic) UIImageView *friendThreeView; //delete
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *topView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *middleView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *bottomView;
@@ -34,6 +34,7 @@
 @property (nonatomic) int randomIndex1;
 @property (nonatomic) int randomIndex2;
 @property (nonatomic) int randomIndex3;
+@property (nonatomic) int imagesCropped;
 
 @property (strong, nonatomic) NSArray *facebookPhotosAll;
 @property (strong, nonatomic) NSMutableArray *savedResults;
@@ -44,6 +45,7 @@
 @property (strong, nonatomic) FacebookBrain *brainInstance;
 @property (strong, nonatomic) SharedDatabaseDocument *sharedDocument;
 @property (strong, nonatomic) NSMutableArray *friendsNotChosen;
+@property (strong, nonatomic) NSMutableArray *imagesNotChosen;
 @property (strong, nonatomic) QuestionAskerViewController *questionController;
 
 @property (strong, nonatomic) NSTimer *timer;
@@ -51,8 +53,6 @@
 @end
 
 @implementation FriendSelectorViewController
-
-
 
 # pragma - mark Lazy Instantiation of Properties
 - (UIAlertView *)connectionError
@@ -65,7 +65,7 @@
 
 - (void) alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
-    if (!self.friendOneView.image || !self.friendTwoView.image || !self.friendThreeView.image) {
+    if (self.imagesCropped < 3) {
     [self.navigationController popViewControllerAnimated:YES];
     [self.timer invalidate];
     } 
@@ -81,7 +81,7 @@
 
 - (void)appReopened
 {
-    if (self.friendOneView.image == nil || self.friendTwoView.image == nil || self.friendThreeView.image == nil) {
+    if (self.imagesCropped < 3) {
         if (!self.facebookPhotosAll) [self.brainInstance getFacebookData];
         else [self setFacebookImages:self.facebookPhotosAll];
     }
@@ -115,11 +115,52 @@
     [[self view] addGestureRecognizer:oneFingerSwipeRight];
 }
 
+-(CGRect)makeRectForImageViews:(int)viewNumber
+{
+    CGFloat y = 0;
+
+    if (self.view.frame.size.height <= 480) {
+        switch (viewNumber) {
+            case 1:
+                y = 21;
+                self.topButton.enabled = YES;
+                break;
+            case 2:
+                y  = 153;
+                self.middleButton.enabled = YES;
+                break;
+            case 3:
+                y = 282;
+                self.bottomButton.enabled = YES;
+                break;
+        }
+
+    } else if (self.view.frame.size.height > 480) {
+        switch (viewNumber) {
+            case 1:
+                y = 30;
+                self.topButton.enabled = YES;
+                break;
+            case 2:
+                y = 192;
+                self.middleButton.enabled = YES;
+                break;
+            case 3:
+                y = 347;
+                self.bottomButton.enabled = YES;
+                break;
+        }
+      }
+
+    return CGRectMake(104, y, 124, 83);
+}
+
 # pragma - mark Crop Photos
-- (void) cropPhoto:(UIImage *)originalImage inImageView:(UIImageView *)imageView atXPoint:(int)x atYPoint:(int)y withWidthSize:(int)width withHeightSize:(int)height
+- (void) cropPhoto:(UIImage *)originalImage forViewNumber:(int)viewNumber inImageView:(UIImageView *)imageView
 {
     CGSize size = [originalImage size];
-    [imageView setFrame:CGRectMake(0, 0, size.width, size.height)];
+    UIImageView *createView = [[UIImageView alloc]initWithFrame:[self makeRectForImageViews:viewNumber]];
+    imageView = createView;
     [self.view addSubview:imageView];
     
     CGRect rect = CGRectMake (size.width / 4, size.height / 4 ,
@@ -128,39 +169,39 @@
     //core foundation objects which are "created" or "copied" must be released using CFRelease
     CGImageRef cgImage = CGImageCreateWithImageInRect([originalImage CGImage], rect);
     [imageView setImage:[UIImage imageWithCGImage:cgImage]];
+    
+    if (cgImage) {
+        if (!self.imagesCropped) self.imagesCropped = 0;
+        if (self.imagesCropped < 4)  self.imagesCropped++;
+        if (!self.imagesNotChosen)  self.imagesNotChosen = [[NSMutableArray alloc]initWithCapacity:3];
+
+        [self.imagesNotChosen addObject:imageView];
+    }
+    
     CGImageRelease(cgImage);
 }
 
-# pragma - maintain current data 
-//in the event the view controller is dismissed before a friend is chosen, hold onto the current friend set
-- (NSArray *)captureCurrentImages
-{
-    UIImage *firstFriend = self.friendOneView.image;
-    UIImage *secondFriend = self.friendTwoView.image;
-    UIImage *thirdFriend = self.friendThreeView.image;
-    NSArray *imagesNotChosen = [[NSArray alloc]initWithObjects:firstFriend, secondFriend, thirdFriend, nil];
-    
-    return imagesNotChosen;
-}
+# pragma - maintain current data
 
 - (void)maintainDataBeforeFriendIsChosen
 {
     if ([DataController dc].imagesNotChosen == nil || [DataController dc].friendsNotChosen == nil){
-        [DataController dc].imagesNotChosen =[self captureCurrentImages];
+        [DataController dc].imagesNotChosen =self.imagesNotChosen;
         [DataController dc].friendsNotChosen = self.friendsNotChosen;
     }
 }
 
 # pragma - get Facebook Friends and Populate View with Data
-- (void)postDownloadTasks:(UIActivityIndicatorView *)spinner setLabel:(UILabel *)friendLabel withFriendName:(NSString *)friendName cropImage:(UIImage *)friendImage inImageView:(UIImageView *)imageView atYPoint:(int)yPoint
+- (void)postDownloadTasks:(UIActivityIndicatorView *)spinner setLabel:(UILabel *)friendLabel withFriendName:(NSString *)friendName cropImage:(UIImage *)friendImage inImageView:(UIImageView *)imageView forViewNumber:(int)viewNumber
 {
     [spinner stopAnimating];
     friendLabel.TextAlignment = NSTextAlignmentCenter;
     friendLabel.TextColor = [UIColor whiteColor];
     friendLabel.Text = friendName;
-    [self cropPhoto:friendImage inImageView:imageView atXPoint:103 atYPoint:yPoint withWidthSize:127 withHeightSize:85];
-    if (self.friendOneView.image && self.friendTwoView.image && self.friendThreeView.image && self.timer) {
-        [self.timer invalidate];
+    [self cropPhoto:friendImage forViewNumber:viewNumber inImageView:imageView];
+
+    if (self.imagesCropped == 3) {
+    [self.timer invalidate];
         self.timer = nil;
     }
 }
@@ -176,7 +217,7 @@
     }
 }
 
-- (void)fetchImage: (NSString *)request forView:(UIActivityIndicatorView *)spinner forLabel:(UILabel *)label withName:(NSString *)name andImageView:(UIImageView *)imageView atYPoint:(float)Y
+- (void)fetchImage: (NSString *)request forView:(UIActivityIndicatorView *)spinner forLabel:(UILabel *)label withName:(NSString *)name andImageView:(UIImageView *)imageView withViewNumber:(int)viewNumber
 {
     __weak FriendSelectorViewController *zelf = self;
     NSMutableURLRequest *urlRequest;
@@ -191,7 +232,7 @@
                                }   else  {
                                    UIImage *image = [UIImage imageWithData:data];
                                    [[DataController dc].facebookCachedPhotos setObject:image forKey:name];
-                                   [zelf postDownloadTasks:spinner setLabel:label withFriendName:name cropImage:image inImageView:imageView atYPoint:Y];
+                                   [zelf postDownloadTasks:spinner setLabel:label withFriendName:name cropImage:image inImageView:imageView forViewNumber:viewNumber];
                                     }
                         
                            }];
@@ -227,21 +268,21 @@
     UIImage *thirdImage = [[DataController dc].facebookCachedPhotos objectForKey:self.thirdFriendName];
                 
     if (firstImage) {
-    [self postDownloadTasks:self.topView setLabel:self.firstFriendLabel withFriendName:self.firstFriendName cropImage:firstImage inImageView:self.friendOneView atYPoint:22];
+        [self postDownloadTasks:self.topView setLabel:self.firstFriendLabel withFriendName:self.firstFriendName cropImage:firstImage inImageView:self.friendOneView forViewNumber:1];
     }   else {
-        [self fetchImage:firstRequest forView:self.topView forLabel:self.firstFriendLabel withName:self.firstFriendName andImageView:self.friendOneView atYPoint:22];
+        [self fetchImage:firstRequest forView:self.topView forLabel:self.firstFriendLabel withName:self.firstFriendName andImageView:self.friendOneView withViewNumber:1];
         }
             
     if (secondImage) {
-    [self postDownloadTasks:self.middleView setLabel:self.secondFriendLabel withFriendName:self.secondFriendName cropImage:secondImage inImageView:self.friendTwoView atYPoint:149];
+        [self postDownloadTasks:self.middleView setLabel:self.secondFriendLabel withFriendName:self.secondFriendName cropImage:secondImage inImageView:self.friendTwoView forViewNumber:2];
     }   else {
-        [self fetchImage:secondRequest forView:self.middleView forLabel:self.secondFriendLabel withName:self.secondFriendName andImageView:self.friendTwoView atYPoint:149];
+        [self fetchImage:secondRequest forView:self.middleView forLabel:self.secondFriendLabel withName:self.secondFriendName andImageView:self.friendTwoView withViewNumber:2];
         }
     
     if (thirdImage) {
-    [self postDownloadTasks:self.bottomView setLabel:self.thirdFriendLabel withFriendName:self.thirdFriendName cropImage:thirdImage inImageView:self.friendThreeView atYPoint:364];
+        [self postDownloadTasks:self.bottomView setLabel:self.thirdFriendLabel withFriendName:self.thirdFriendName cropImage:thirdImage inImageView:self.friendThreeView forViewNumber:3];
     }   else {
-        [self fetchImage:thirdRequest forView:self.bottomView forLabel:self.thirdFriendLabel withName:self.thirdFriendName andImageView:self.friendThreeView atYPoint:346];
+        [self fetchImage:thirdRequest forView:self.bottomView forLabel:self.thirdFriendLabel withName:self.thirdFriendName andImageView:self.friendThreeView withViewNumber:3];
         }
 
 }
@@ -249,13 +290,9 @@
 - (void)postCallBackTasks:(FacebookBrain *)sender
 {  
     if ([[DataController dc].facebookArray count] > 2) {
-        NSLog(@"we have more than two friends");
         [self.timer invalidate];
         self.timer = nil;
         self.facebookPhotosAll = [DataController dc].facebookArray;
-        self.topButton.enabled = YES;
-        self.middleButton.enabled = YES;
-        self.bottomButton.enabled = YES;
         if (self.facebookPhotosAll) {
         [self setFacebookImages:self.facebookPhotosAll];
         }  else {
@@ -263,7 +300,7 @@
             
         }
         
-    } else NSLog(@"we do not have enough friends");
+    } else [self.connectionError show];
 }
 
 - (void)facebookFetchBegan:(FacebookBrain *)sender
@@ -279,18 +316,15 @@
     
     //if this not a new game, reset the view with previously chosen facebook friends
     if ([[DataController dc].imagesNotChosen count] == 3 && [[DataController dc].friendsNotChosen count] == 3) {
-    self.topView.hidden = YES;
-    self.middleView.hidden = YES;
-    self.bottomView.hidden = YES;
+    
+        self.topView.hidden = YES;
+        self.middleView.hidden = YES;
+        self.bottomView.hidden = YES;
         
-    UIImage *friendOne = [[DataController dc].imagesNotChosen objectAtIndex:0];
-    UIImage *friendTwo = [[DataController dc].imagesNotChosen objectAtIndex:1];
-    UIImage *friendThree = [[DataController dc].imagesNotChosen objectAtIndex:2];
+        for (UIImageView *view in [DataController dc].imagesNotChosen) {
+            [self.view addSubview:view];
+        }
         
-    self.friendOneView.image = friendOne;
-    self.friendTwoView.image = friendTwo;
-    self.friendThreeView.image = friendThree;
-                
     self.firstFriendName = [[[DataController dc].friendsNotChosen objectAtIndex:0]objectForKey:FRIEND_NAME];
     self.firstFriendLabel.text = self.firstFriendName;
     self.firstFriendLabel.TextAlignment = NSTextAlignmentCenter;
@@ -316,7 +350,7 @@
         self.topButton.enabled = NO;
         self.middleButton.enabled = NO;
         self.bottomButton.enabled = NO;
-        if ([[DataController dc].facebookArray count] > 2) { 
+        if ([[DataController dc].facebookArray count] > 2) {
             [self postCallBackTasks:nil];
             [self facebookFetchBegan:nil];
         }   else {
@@ -387,6 +421,7 @@
 #pragma button presses
 - (IBAction)friendChosen:(UIButton *)sender {
     self.savedResults = [[NSMutableArray alloc]init];
+    self.imagesCropped = 0;
     
     if (self.timer) {
     [self.timer invalidate];

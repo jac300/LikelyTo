@@ -47,8 +47,7 @@
 
 
 - (IBAction)facebookConnectOrPlay:(UIButton *)sender {
-    AppDelegate *appDelegate =
-    [[UIApplication sharedApplication] delegate];
+    AppDelegate *appDelegate =(AppDelegate *)[[UIApplication sharedApplication] delegate];
     if (FBSession.activeSession.isOpen) {
        [self performSegueWithIdentifier:@"playGame" sender:self];
         //[appDelegate closeSession];
@@ -134,7 +133,7 @@
      name:FBSessionStateChangedNotification
      object:nil];
     
-    AppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     [appDelegate openSessionWithAllowLoginUI:NO];
     
 }

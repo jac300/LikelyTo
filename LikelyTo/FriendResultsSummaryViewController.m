@@ -7,54 +7,107 @@
 //
 
 #import "FriendResultsSummaryViewController.h"
+#import "Friend+Create.h"
 #import "FacebookLogin.h"
+#import "FacebookBrain.h"
 
-@interface FriendResultsSummaryViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UIAlertViewDelegate>
-@property (weak, nonatomic) IBOutlet UIImageView *friendImageView;
+@interface FriendResultsSummaryViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UIAlertViewDelegate, FacebookCallHandler>
 @property (weak, nonatomic) IBOutlet UILabel *friendNameLabel;
-@property (weak, nonatomic) IBOutlet UIImageView *resultView;
+//@property (weak, nonatomic) IBOutlet UIImageView *resultView;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIImageView *blueBackgroundView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
 @property (strong, nonatomic) UIAlertView *connectionError;
 @property (strong, nonatomic) NSTimer *timer;
+@property (strong, nonatomic) NSTimer *shareTimer;
+@property (strong, nonatomic) FacebookBrain *brainInstance;
+@property (strong, nonatomic) UIActivityIndicatorView *shareRequestSpinner;
+
 @end
 
 @implementation FriendResultsSummaryViewController
 
+
+//delegate methods
+- (void)postCallBackTasks:(FacebookBrain *)sender {
+    [self.shareTimer invalidate];
+    [self.shareRequestSpinner stopAnimating];
+}
+
+- (void)showConnectionError: (FacebookBrain *)sender {
+    [self.connectionError show];
+}
+
+- (UIActivityIndicatorView *)makeSpinnerForShareRequest {
+    
+    UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    
+    CGFloat x = self.view.bounds.size.width - 25;
+    CGFloat y = self.view.bounds.origin.y + 20;
+    
+    CGPoint center = CGPointMake(x, y);
+    view.center = center;
+    
+    view.hidesWhenStopped = YES;
+    return view;
+}
+
 - (UIAlertView *)connectionError
 {
     if (!_connectionError)  _connectionError = [[UIAlertView alloc]initWithTitle:@"Connection  Error!" message:@"We were unable to connect with Facebook. Please make sure you have a network connection." delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-
+    
     return _connectionError;
 }
 
 - (void)appClosed {
     [self.connectionError dismissWithClickedButtonIndex:0 animated:NO];
     [self.timer invalidate];
+    [self.shareTimer invalidate];
+    [self.shareRequestSpinner stopAnimating];
 }
 
 - (void) alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
-     [self dismissViewControllerAnimated:YES completion:nil];
+    if (self.connectionError) {
+    [self dismissViewControllerAnimated:YES completion:nil];
     [self.timer invalidate];
+    [self.shareTimer invalidate];
+    [self.shareRequestSpinner stopAnimating];
+    }
 }
 
--(void)showConnectionError:(NSTimer *)timer
+-(void)showConnectionErrorForTimeOut:(NSTimer *)timer
 {
     [self.connectionError show];
-    if (self.timer) [self.timer invalidate];
+    [self.timer invalidate];
+    [self.shareTimer invalidate];
+    [self.shareRequestSpinner stopAnimating];
+
 }
 
 - (IBAction)dismissViewController:(id)sender {
     [self dismissViewControllerAnimated:YES completion:nil];
+    [self.timer invalidate];
+    [self.shareTimer invalidate];
+    [self.shareRequestSpinner stopAnimating];
 }
 
-- (void) cropPhoto:(UIImage *)originalImage inImageView:(UIImageView *)imageView atXPoint:(int)x atYPoint:(int)y withWidthSize:(int)width withHeightSize:(int)height
+-(CGRect)makeRectForImageView
+{
+    CGFloat y = 0;
+    if (self.view.frame.size.height <= 480) y = 46;
+    else if (self.view.frame.size.height > 480)  y = 50;
+
+    CGRect rect = CGRectMake(97, y, 126, 84);
+    return rect;
+}
+
+
+- (void) cropPhoto:(UIImage *)originalImage 
 {
     CGSize size = [originalImage size];
     
-    [imageView setFrame:CGRectMake(0, 0, size.width, size.height)];
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:[self makeRectForImageView]];
     [self.view addSubview:imageView];
     
     CGRect rect = CGRectMake (size.width / 4, size.height / 4 ,
@@ -67,18 +120,26 @@
 
 - (void)facebookFetchBegan
 {
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:12.0 target:self selector:@selector(showConnectionError:) userInfo:nil repeats:NO];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(showConnectionErrorForTimeOut:) userInfo:nil repeats:NO];
+}
+
+- (void)shareRequestMade
+{
+    self.shareTimer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(showConnectionErrorForTimeOut:) userInfo:nil repeats:NO];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appClosed) name:@"AppDidCloseNotification" object:nil];
     
     self.collectionView.backgroundColor = nil;
     [self.spinner startAnimating];
     self.spinner.hidesWhenStopped = YES;
+    
+    self.brainInstance = [[FacebookBrain alloc]init];
+    self.brainInstance.delegate = self;
 
     self.friendNameLabel.text = self.friendName;
     self.friendNameLabel.textAlignment = NSTextAlignmentCenter;
@@ -86,7 +147,7 @@
     
     UIImage *image = [[DataController dc].facebookCachedPhotos objectForKey:self.friendName];
     if (image) {
-        [self cropPhoto:image inImageView:self.friendImageView atXPoint:97 atYPoint:87 withWidthSize:127 withHeightSize:85];
+        [self cropPhoto:image];
         [self.spinner stopAnimating];
     }   else {
         __weak FriendResultsSummaryViewController *zelf = self;
@@ -100,7 +161,7 @@
                                       [zelf.timer invalidate];
                                        UIImage *image = [UIImage imageWithData:data];
                                        [[DataController dc].facebookCachedPhotos setObject:image forKey:zelf.friendName];
-                                        [zelf cropPhoto:image inImageView:zelf.friendImageView atXPoint:97 atYPoint:87 withWidthSize:127 withHeightSize:85];
+                                      [zelf cropPhoto:image];
                                    }
                                }];
         }
@@ -109,13 +170,10 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    self.friendImageView = nil;
     self.friendNameLabel = nil;
-    self.resultView = nil;
     self.collectionView = nil;
     self.blueBackgroundView = nil;
     self.spinner = nil;
-    self.collectionView = nil;
 }
 
 -(NSInteger)collectionView:(UICollectionView *)collectionView
@@ -160,9 +218,57 @@
     questionView = (UIImageView *)[cell viewWithTag:2];
     questionView.image = [UIImage imageNamed:[self.questionKeys objectAtIndex:indexPath.row]];
     
+    
     return cell;
 }
 
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    [self shareRequestMade];
+    self.shareRequestSpinner = [self makeSpinnerForShareRequest];
+    [self.view addSubview:self.shareRequestSpinner];
+    [self.shareRequestSpinner startAnimating];
+    
+    NSNumber *stat = [self.numericResults objectAtIndex:indexPath.row];
+    NSString *s;
+    
+    if ([stat intValue] > 1) {
+        s = @"s";
+    } else s = @"";
+    
+    NSDictionary *questionsAndKeys = [Friend questionsAndQuestionKeys];
+    NSString *questionKey = [self.questionKeys objectAtIndex:indexPath.row];
+    NSString *question = [questionsAndKeys objectForKey:questionKey];
+    NSString *description;
+    
+    if ([questionKey isEqualToString:KAREOKE] || [questionKey isEqualToString:DRIVE] || [questionKey isEqualToString:LOTTERY] || [questionKey isEqualToString:WEDDING] || [questionKey isEqualToString:FIGHT_CRIME] || [questionKey isEqualToString:PIE_EATING] || [questionKey isEqualToString:BUCKET_LIST] || [questionKey isEqualToString:REALITY_SHOW] || [questionKey isEqualToString:TATOO] || [questionKey isEqualToString:TIME_TRAVEL] || [questionKey isEqualToString:ISLAND] ) {
+        
+        description = [NSString stringWithFormat:@"In %@ game%@, I chose %@ as the friend I'd be most likely to %@ with!", stat, s, self.friendName, question];
+   
+    } else if ([questionKey isEqualToString:CLOTHES] || [questionKey isEqualToString:SWITCH_LIVES] || [questionKey isEqualToString:HAIRCUT] || [questionKey isEqualToString:BLIND_DATE] || [questionKey isEqualToString:STATUS_UPDATE] || [questionKey isEqualToString:GAME_SHOW] || [questionKey isEqualToString:DIARY] ) {
+        
+        description = [NSString stringWithFormat:@"In %@ game%@, I chose %@ as the friend I'd be most likely to let %@!", stat, s, self.friendName, question];
+    
+    } else if ([questionKey isEqualToString:NOVEL]) {
+        
+        description = [NSString stringWithFormat:@"In %@ game%@, I chose %@ as the friend who would be most likely to %@!", stat, s, self.friendName, question];
+    
+    } else if ([questionKey isEqualToString:CONFESS_CRIME]) {
+        
+        description = [NSString stringWithFormat:@"In %@ game%@, I chose %@ as the friend who I would be most likely to %@ to!", stat, s, self.friendName, question];
+    }
+
+    NSMutableDictionary *postParameters = [[NSMutableDictionary alloc]initWithObjectsAndKeys:
+                                          @"https://itunes.apple.com/us/app/likelyto/id603161949?mt=8", @"link",
+                                          @"LikelyTo", @"name",
+                                          description, @"description",
+                                          @"I just played!", @"caption",
+                                          nil];
+    
+    [self.brainInstance getPermissionToPublishStory:postParameters];
+
+}
+                       
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];

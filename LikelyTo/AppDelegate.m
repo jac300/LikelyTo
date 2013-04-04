@@ -27,6 +27,14 @@ NSString *const FBSessionStateChangedNotification =
             if (!error) {
                 // We have a valid session
                 //NSLog(@"User session found");
+                
+                self.facebook = [[Facebook alloc]
+                                 initWithAppId:FBSession.activeSession.appID
+                                 andDelegate:nil];
+                
+                // Store the Facebook session information
+                self.facebook.accessToken = FBSession.activeSession.accessToken;
+                self.facebook.expirationDate = FBSession.activeSession.expirationDate;
             }
             break;
             
@@ -34,9 +42,11 @@ NSString *const FBSessionStateChangedNotification =
         case FBSessionStateClosedLoginFailed:
             [FBSession.activeSession
              closeAndClearTokenInformation];
+            self.facebook = nil;
             break;
         default:
-        break;}
+        break;
+    }
     
     [[NSNotificationCenter defaultCenter]
      postNotificationName:FBSessionStateChangedNotification
@@ -90,9 +100,103 @@ NSString *const FBSessionStateChangedNotification =
     [FBSession.activeSession closeAndClearTokenInformation];
 }
 
+
+- (BOOL) checkAppUsageTrigger {
+    // Initialize the app active count
+    NSInteger appActiveCount = 0;
+    // Read the stored value of the counter, if it exists
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"AppUsedCounter"]) {
+        appActiveCount = [defaults integerForKey:@"AppUsedCounter"];
+    }
+    
+    // Increment the counter
+    appActiveCount++;
+    BOOL trigger = NO;
+    // Only trigger the prompt if the facebook session is valid and
+    // the counter is greater than a certain value, 3 in this sample
+    if (FBSession.activeSession.isOpen && (appActiveCount >= 1)) {
+        trigger = YES;
+        appActiveCount = 0;
+    }
+    // Save the updated counter
+    [defaults setInteger:appActiveCount forKey:@"AppUsedCounter"];
+    [defaults synchronize];
+    return trigger;
+}
+
+/*
+ * When the alert is dismissed check which button was clicked so
+ * you can take appropriate action, such as displaying the request
+ * dialog, or setting a flag not to prompt the user again.
+ */
+
+- (void)alertView:(UIAlertView *)alertView
+didDismissWithButtonIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == 0) {
+        // User has clicked on the No Thanks button, do not ask again
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setBool:YES forKey:@"AppUsageCheck"];
+        [defaults synchronize];
+        self.appUsageCheckEnabled = NO;
+    } else if (buttonIndex == 1) {
+        // User has clicked on the Tell Friends button
+        [self performSelector:@selector(sendRequest)
+                   withObject:nil afterDelay:0.5];
+    }
+}
+
+/**
+ * A function for parsing URL parameters.
+ */
+- (NSDictionary*)parseURLParams:(NSString *)query {
+    NSArray *pairs = [query componentsSeparatedByString:@"&"];
+    NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+    for (NSString *pair in pairs) {
+        NSArray *kv = [pair componentsSeparatedByString:@"="];
+        NSString *val =
+        [[kv objectAtIndex:1]
+         stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        
+        [params setObject:val forKey:[kv objectAtIndex:0]];
+    }
+    return params;
+}
+
+- (void)sendRequest {
+    FBSBJSON *jsonWriter = [FBSBJSON new];
+    NSDictionary *gift = [NSDictionary dictionaryWithObjectsAndKeys:
+                          @"5", @"social_karma",
+                          @"1", @"badge_of_awesomeness",
+                          nil];
+    
+    NSString *giftStr = [jsonWriter stringWithObject:gift];
+    NSMutableDictionary* params =
+    [NSMutableDictionary dictionaryWithObjectsAndKeys:
+     @"Get LikelyTo and play using your Facebook friends!", @"message",
+     giftStr, @"data",
+     nil];
+    
+    [self.facebook dialog:@"apprequests"
+                andParams:params
+              andDelegate:self];
+}
+
+// Handle the request call back
+- (void)dialogCompleteWithUrl:(NSURL *)url {
+    NSDictionary *params = [self parseURLParams:[url query]];
+    NSString *requestID = [params valueForKey:@"request"];
+    NSLog(@"Request ID: %@", requestID);
+}
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    
+//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+//    self.appUsageCheckEnabled = YES;
+//    if ([defaults objectForKey:@"AppUsageCheck"]) {
+//        self.appUsageCheckEnabled = [defaults boolForKey:@"AppUsageCheck"];
+//    }
     return YES;
 }
 
@@ -104,19 +208,30 @@ NSString *const FBSessionStateChangedNotification =
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"AppDidCloseNotification" object:nil];
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"AppDidReopenNotification" object:nil];
-    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     [FBSession.activeSession handleDidBecomeActive];
+    // Check the flag for enabling any prompts. If that flag is on
+    // check the app active counter
+    
+//    if (self.appUsageCheckEnabled && [self checkAppUsageTrigger]) {
+//        // If the user should be prompter to invite friends, show
+//        // an alert with the choices.
+//        UIAlertView *alert = [[UIAlertView alloc]
+//                              initWithTitle:@"Invite Friends"
+//                              message:@"If you enjoy using this app, would you mind taking a moment to invite a few friends that you think will also like it?"
+//                              delegate:self
+//                              cancelButtonTitle:@"Don't Ask Me Again"
+//                              otherButtonTitles:@"Tell Friends!", @"Remind Me Later", nil];
+//        [alert show];
+//    }
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

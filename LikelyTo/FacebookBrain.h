@@ -31,5 +31,6 @@
 @property (weak, nonatomic) id <FacebookCallHandler> delegate;
 
 - (void)getFacebookData;
+- (void)getPermissionToPublishStory:(NSMutableDictionary *)postParameters;
 
 @end

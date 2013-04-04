@@ -26,8 +26,6 @@
 
 @implementation QuestionAskerViewController
 
-
-
 - (IBAction)homeButton:(id)sender {
      [self.navigationController popViewControllerAnimated:YES];
 }
@@ -83,7 +81,6 @@
 {
     [super viewWillAppear:animated];
    
-    
     if ([self checkFacebookRefreshCounter] || [[DataController dc].facebookArray count] < 3)  {
         self.brainInstance = [[FacebookBrain alloc]init];
         [self.brainInstance getFacebookData];

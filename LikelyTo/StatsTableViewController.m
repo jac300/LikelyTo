@@ -18,7 +18,6 @@
 @property (nonatomic) BOOL beganUpdates;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) UIAlertView *savingError;
-@property (weak, nonatomic) IBOutlet UIImageView *activityView;
 @property (strong, nonatomic) UIActivityIndicatorView *spinner;
 
 @end
@@ -34,20 +33,19 @@
     return _savingError;
 }
 
-- (UIActivityIndicatorView *)spinner
+- (UIActivityIndicatorView *)makeSpinner
 {
-    if (!_spinner) {
-   _spinner = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-    }
     
-    return  _spinner;
-}
-
-- (void)setUpSpinner
-{
-    [self.activityView addSubview:self.spinner];
-    [self.spinner startAnimating];
-    self.spinner.hidesWhenStopped = YES;
+    UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    
+    CGFloat x = self.view.bounds.size.width - 25;
+    CGFloat y = self.view.bounds.origin.y + 20;
+    
+    CGPoint center = CGPointMake(x, y);
+    view.center = center;
+    
+    view.hidesWhenStopped = YES;
+    return view;
 }
 
 #pragma mark - core data query and saving
@@ -63,8 +61,9 @@
     NSError *error = nil;
     results = [[DataController dc].database.managedObjectContext
                             executeFetchRequest:request error:&error];
-    
-    if ([results count] == 0) self.spinner = nil;
+    if (results) {
+        [self.spinner stopAnimating];
+    }
 }
 
 - (void)useDocument
@@ -78,11 +77,9 @@
     }   else if ([DataController dc].database.documentState == UIDocumentStateClosed) {
         [[DataController dc].database openWithCompletionHandler:^(BOOL success) {
         [zelf setUpFetchedResultsController];
-        [zelf setUpSpinner];
         }];
         }   else if ([DataController dc].database.documentState == UIDocumentStateNormal) {
             [zelf setUpFetchedResultsController];
-            [zelf setUpSpinner];
             }
 }
 
@@ -333,13 +330,15 @@
 {
     [super viewDidLoad];
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
+    self.spinner = [self makeSpinner];
+    [self.view addSubview:self.spinner];
+    [self.spinner startAnimating];
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     self.tableView = nil;
-    self.activityView = nil;
 }
 
 #pragma mark - prepare for segue

@@ -34,4 +34,7 @@
 
 + (Friend *)friendWithFBInfo:(NSDictionary *)FBInfo inManagedObjectContext:(NSManagedObjectContext *)context;
 
++ (NSDictionary *)questionsAndQuestionKeys;
+
+
 @end
