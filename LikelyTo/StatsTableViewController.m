@@ -16,9 +16,10 @@
 @property (nonatomic) BOOL suspendAutomaticTrackingOfChangesInManagedObjectContext;
 @property BOOL debug;
 @property (nonatomic) BOOL beganUpdates;
-@property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) UIAlertView *savingError;
 @property (strong, nonatomic) UIActivityIndicatorView *spinner;
+
+@property (strong, nonatomic) UITableView *tableView;
 
 @end
 
@@ -35,7 +36,6 @@
 
 - (UIActivityIndicatorView *)makeSpinner
 {
-    
     UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     
     CGFloat x = self.view.bounds.size.width - 25;
@@ -238,27 +238,70 @@
     }
 }
 
-#pragma mark - view controller class methods
-- (IBAction)dismissView:(id)sender {
+#pragma mark - view controller methods
+- (void)dismissView:(UIButton *)sender {
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+-(UIButton *)makeDismissButton
+{
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage *buttonImage = [UIImage imageNamed:@"playButton"];
+    
+    CGFloat width = buttonImage.size.width;
+    CGFloat height = buttonImage.size.height;
+    
+    CGFloat X = self.view.frame.size.width/2 - width/2;
+    CGFloat Y = 1;
+    
+    button.frame = CGRectMake(X, Y, width, height);
+    [button setImage:buttonImage forState:UIControlStateNormal];
+    [button addTarget:self
+               action:@selector(dismissView:)
+     forControlEvents:UIControlEventTouchUpInside];
+    
+    return button;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *CellIdentifier = @"newFriendCell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"newFriendCell"];
+
+    
+   // UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     
     if (cell == nil) {
-        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+        cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
     }
     
     // try cacheing images if using FB thumbnail images of friends
     //cells are re-used, so must change pic if cell is dismissed and re-used during scrolling before download completes
+   
+    Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
+    
+    //make detail label
+//    CGFloat width = cell.bounds.size.width;
+//    CGFloat height = cell.bounds.size.height/4;
+//    CGFloat x = 52;
+//    CGFloat y = cell.bounds.size.height * 3/4;
+//    CGRect labelFrame = CGRectMake(x, y, width, height);
+//    UILabel *detailLabel = [[UILabel alloc]initWithFrame:labelFrame];
+//    detailLabel.textColor = [UIColor lightGrayColor];
+//    detailLabel.font = [detailLabel.font fontWithSize:12];
+//    detailLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount];
+//    [cell addSubview:detailLabel];
     
     //get the managed object that is on each row
-    Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
     cell.textLabel.text = friend.name;
-    cell.detailTextLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount]; 
+    cell.textLabel.font = [cell.textLabel.font fontWithSize:20];
+    
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount];
+    cell.detailTextLabel.font = [cell.detailTextLabel.font fontWithSize:12];
+    
+
+    cell.detailTextLabel.textColor = [UIColor lightGrayColor];
+    
     [self.spinner stopAnimating];
     cell.imageView.image = [UIImage imageNamed:@"icon57x57"];
     
@@ -302,6 +345,14 @@
 }
 */
 
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+     NSLog(@"I am being called");
+    [self performSegueWithIdentifier:@"detailsView" sender:self];
+   
+}
+
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
 {
     __weak StatsTableViewController *zelf = self;
@@ -325,6 +376,31 @@
     [self.tableView reloadData];
 }
 
+-(UITableView *)makeTableView
+{
+    CGFloat x = 0;
+    CGFloat y = 50;
+    CGFloat width = self.view.frame.size.width;
+    CGFloat height = self.view.frame.size.height - 50;
+    CGRect tableFrame = CGRectMake(x, y, width, height);
+    
+    UITableView *tableView = [[UITableView alloc]initWithFrame:tableFrame style:UITableViewStylePlain];
+    
+    tableView.rowHeight = 45;
+    tableView.sectionFooterHeight = 22;
+    tableView.sectionHeaderHeight = 22;
+    tableView.scrollEnabled = YES;
+    tableView.showsVerticalScrollIndicator = YES;
+    tableView.userInteractionEnabled = YES;
+    tableView.bounces = YES;
+    
+    tableView.delegate = self;
+    tableView.dataSource = self;
+    
+    return tableView;
+}
+
+
 #pragma mark - view controller life cycle
 - (void)viewDidLoad
 {
@@ -333,6 +409,12 @@
     self.spinner = [self makeSpinner];
     [self.view addSubview:self.spinner];
     [self.spinner startAnimating];
+    UIButton *dismissButton = [self makeDismissButton];
+    [self.view addSubview:dismissButton];
+    self.tableView = [self makeTableView];
+    //[self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"newFriendCell"];
+    [self.view addSubview:self.tableView];
+
 }
 
 - (void)didReceiveMemoryWarning
@@ -344,8 +426,10 @@
 #pragma mark - prepare for segue
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([segue.identifier isEqualToString:@"friendResultsDetail"]){
-    NSIndexPath *indexPath = [self.tableView indexPathForCell:sender];
+    if ([segue.identifier isEqualToString:@"detailsView"]){
+        
+    //NSIndexPath *indexPath = [self.tableView indexPathForCell:sender];
+    NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
     Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
     
     if (segue.destinationViewController) {

@@ -13,7 +13,6 @@
 
 @interface FriendResultsSummaryViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UIAlertViewDelegate, FacebookCallHandler>
 @property (weak, nonatomic) IBOutlet UILabel *friendNameLabel;
-//@property (weak, nonatomic) IBOutlet UIImageView *resultView;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIImageView *blueBackgroundView;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
