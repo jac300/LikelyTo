@@ -83,7 +83,6 @@
 		1A60733E16C1871700555022 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A60733D16C1871700555022 /* FacebookSDK.framework */; };
 		1A60735816C19D4D00555022 /* blueBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 1A60735716C19D4D00555022 /* blueBackground.png */; };
 		1AD530B316E6636300545F05 /* SharedDatabaseDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AD530B216E6636100545F05 /* SharedDatabaseDocument.m */; };
-		1AEFA7DA17089B9E003D1EA0 /* shareTab.png in Resources */ = {isa = PBXBuildFile; fileRef = 1AEFA7D917089B9E003D1EA0 /* shareTab.png */; };
 		1AEFA7E21708B316003D1EA0 /* shareTab3.png in Resources */ = {isa = PBXBuildFile; fileRef = 1AEFA7E11708B316003D1EA0 /* shareTab3.png */; };
 /* End PBXBuildFile section */
 
@@ -178,8 +177,7 @@
 		1A60735716C19D4D00555022 /* blueBackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueBackground.png; sourceTree = "<group>"; };
 		1AD530B116E6636000545F05 /* SharedDatabaseDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SharedDatabaseDocument.h; path = ../SharedDatabaseDocument.h; sourceTree = "<group>"; };
 		1AD530B216E6636100545F05 /* SharedDatabaseDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SharedDatabaseDocument.m; path = ../SharedDatabaseDocument.m; sourceTree = "<group>"; };
-		1AEFA7D917089B9E003D1EA0 /* shareTab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shareTab.png; path = ../../shareTab.png; sourceTree = "<group>"; };
-		1AEFA7E11708B316003D1EA0 /* shareTab3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shareTab3.png; sourceTree = "<group>"; };
+		1AEFA7E11708B316003D1EA0 /* shareTab3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shareTab3.png; path = Questions/shareTab3.png; sourceTree = "<group>"; };
 		1AEFA7E41708B8E3003D1EA0 /* Facebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Facebook.h; sourceTree = SOURCE_ROOT; };
 		1AEFA7E51708B8E3003D1EA0 /* FacebookSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FacebookSDK.h; sourceTree = SOURCE_ROOT; };
 		1AEFA7E61708B8E3003D1EA0 /* FBCacheDescriptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBCacheDescriptor.h; sourceTree = SOURCE_ROOT; };
@@ -236,8 +234,6 @@
 		1A5FAC5B16C2D4FF004AC83C /* Questions */ = {
 			isa = PBXGroup;
 			children = (
-				1AEFA7D917089B9E003D1EA0 /* shareTab.png */,
-				1AEFA7E11708B316003D1EA0 /* shareTab3.png */,
 				1A5FAC8416C2E5CD004AC83C /* clothes.png */,
 				1A5FAC7E16C2E53D004AC83C /* lottery.png */,
 				1A5FAC7616C2E1CA004AC83C /* tatoo.png */,
@@ -364,6 +360,7 @@
 			children = (
 				1A5FAC5B16C2D4FF004AC83C /* Questions */,
 				1A5FAC5816C2C02E004AC83C /* whitePictureFrame.png */,
+				1AEFA7E11708B316003D1EA0 /* shareTab3.png */,
 				1A5FAD1916C601CE004AC83C /* exitInfoButton.png */,
 				1A5FACE816C45D1C004AC83C /* blueBackground4Results.png */,
 				1A5FACEA16C45D2A004AC83C /* backButton.png */,
@@ -550,7 +547,6 @@
 				1A442FC816CC04D200869165 /* Default.png in Resources */,
 				1A442FCC16CC04DC00869165 /* Default-568h@2x.png in Resources */,
 				1A442FCE16CC05C900869165 /* Default@2x.png in Resources */,
-				1AEFA7DA17089B9E003D1EA0 /* shareTab.png in Resources */,
 				1AEFA7E21708B316003D1EA0 /* shareTab3.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

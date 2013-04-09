@@ -12,15 +12,19 @@
 #import "FacebookBrain.h"
 
 @interface FriendResultsSummaryViewController () <UICollectionViewDataSource, UICollectionViewDelegate, UIAlertViewDelegate, FacebookCallHandler>
-@property (weak, nonatomic) IBOutlet UILabel *friendNameLabel;
+
+@property (strong, nonatomic) UILabel *friendNameLabel;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIImageView *blueBackgroundView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
+@property (strong, nonatomic) UIActivityIndicatorView *spinner;
+@property (strong, nonatomic) UIImageView *whiteFrame;
 @property (strong, nonatomic) UIAlertView *connectionError;
 @property (strong, nonatomic) NSTimer *timer;
 @property (strong, nonatomic) NSTimer *shareTimer;
 @property (strong, nonatomic) FacebookBrain *brainInstance;
 @property (strong, nonatomic) UIActivityIndicatorView *shareRequestSpinner;
+@property (strong, nonatomic) UIImageView *photo;
+@property (strong, nonatomic) UIButton *dismissButton;
 
 @end
 
@@ -51,6 +55,28 @@
     return view;
 }
 
+
+-(UIButton *)makeDismissButton
+{
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage *buttonImage = [UIImage imageNamed:@"backButton"];
+    
+    CGFloat width = buttonImage.size.width;
+    CGFloat height = buttonImage.size.height;
+    
+    CGFloat X = self.view.frame.size.width/2 - width/2;
+    CGFloat Y = 1;
+    
+    button.frame = CGRectMake(X, Y, width, height);
+    [button setImage:buttonImage forState:UIControlStateNormal];
+    [button addTarget:self
+               action:@selector(dismissViewController:)
+     forControlEvents:UIControlEventTouchUpInside];
+    
+    return button;
+}
+
+    
 - (UIAlertView *)connectionError
 {
     if (!_connectionError)  _connectionError = [[UIAlertView alloc]initWithTitle:@"Connection  Error!" message:@"We were unable to connect with Facebook. Please make sure you have a network connection." delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
@@ -68,10 +94,14 @@
 - (void) alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
     if (self.connectionError) {
-    [self dismissViewControllerAnimated:YES completion:nil];
     [self.timer invalidate];
     [self.shareTimer invalidate];
     [self.shareRequestSpinner stopAnimating];
+    
+        if (!self.photo.image) {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        }
+    
     }
 }
 
@@ -84,7 +114,7 @@
 
 }
 
-- (IBAction)dismissViewController:(id)sender {
+- (void)dismissViewController:(UIButton *)sender {
     [self dismissViewControllerAnimated:YES completion:nil];
     [self.timer invalidate];
     [self.shareTimer invalidate];
@@ -93,27 +123,76 @@
 
 -(CGRect)makeRectForImageView
 {
-    CGFloat y = 0;
-    if (self.view.frame.size.height <= 480) y = 46;
-    else if (self.view.frame.size.height > 480)  y = 50;
+    CGFloat y = 60;
+    
+    if (self.view.frame.size.height > 500) {
+        y = 55;
+    }
 
     CGRect rect = CGRectMake(97, y, 126, 84);
     return rect;
 }
 
+-(UIImageView *)makeWhiteFrameForPhoto
+{
+    CGFloat x = 92;
+    CGFloat width = 136;
+    CGFloat height = 94;
+    CGFloat y = 55;
+    
+    if (self.view.frame.size.height > 500) {
+        y = 50;
+    }
+    
+    CGRect frame = CGRectMake(x, y, width, height);
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:frame];
+    imageView.image = [UIImage imageNamed:@"whitePictureFrame"];
+    
+    self.spinner = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    
+    CGPoint center = imageView.center;
+    self.spinner.center = center;
+    self.spinner.hidesWhenStopped = YES;
+    
+    return imageView;
+}
 
-- (void) cropPhoto:(UIImage *)originalImage 
+- (UILabel *)makeNameLabel
+{
+    CGFloat x = 51;
+    CGFloat width = 220;
+    CGFloat height = 21;
+    CGFloat y = 160;
+    
+    if (self.view.frame.size.height > 500) {
+        
+    }
+    
+    CGRect frame = CGRectMake(x, y, width, height);
+    UILabel *label = [[UILabel alloc]initWithFrame:frame];
+    label.backgroundColor = [UIColor clearColor];
+    label.textColor = [UIColor whiteColor];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.font = [UIFont boldSystemFontOfSize:18];
+    
+    return label;
+    
+}
+
+- (void) cropPhoto:(UIImage *)originalImage
 {
     CGSize size = [originalImage size];
     
-    UIImageView *imageView = [[UIImageView alloc]initWithFrame:[self makeRectForImageView]];
-    [self.view addSubview:imageView];
+    self.photo = [[UIImageView alloc]initWithFrame:[self makeRectForImageView]];
+    [self.view addSubview:self.photo];
     
     CGRect rect = CGRectMake (size.width / 4, size.height / 4 ,
                               (size.width / 1), (size.height / 2));
     
+    //core foundation objects which are "created" or "copied" must be released using CFRelease
     CGImageRef cgImage = CGImageCreateWithImageInRect([originalImage CGImage], rect);
-    [imageView setImage:[UIImage imageWithCGImage:cgImage]];
+    [self.photo setImage:[UIImage imageWithCGImage:cgImage]];
+    
     CGImageRelease(cgImage);
 }
 
@@ -133,16 +212,36 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appClosed) name:@"AppDidCloseNotification" object:nil];
     
-    self.collectionView.backgroundColor = nil;
+    self.dismissButton = [self makeDismissButton];
+    [self.view addSubview:self.dismissButton];
+    self.whiteFrame = [self makeWhiteFrameForPhoto];
+    [self.view addSubview:self.whiteFrame];
+    [self.view addSubview:self.spinner];
     [self.spinner startAnimating];
+    
+    self.friendNameLabel = [self makeNameLabel];
+    [self.view addSubview:self.friendNameLabel];
+    
+    CGFloat collectionViewX = 20;
+    CGFloat collectionViewWidth = 280;
+    CGFloat collectionViewHeight = 380;
+    CGFloat collectionViewY = 210;
+    
+    if (self.view.frame.size.height > 500) {
+        collectionViewY = 220;
+    }
+    
+    CGRect collectionViewFrame = CGRectMake(collectionViewX, collectionViewY, collectionViewWidth, collectionViewHeight);
+    
+    self.collectionView.frame = collectionViewFrame;
+    self.collectionView.backgroundColor = nil;
+
     self.spinner.hidesWhenStopped = YES;
     
     self.brainInstance = [[FacebookBrain alloc]init];
     self.brainInstance.delegate = self;
 
     self.friendNameLabel.text = self.friendName;
-    self.friendNameLabel.textAlignment = NSTextAlignmentCenter;
-    self.friendNameLabel.textColor = [UIColor whiteColor];
     
     UIImage *image = [[DataController dc].facebookCachedPhotos objectForKey:self.friendName];
     if (image) {

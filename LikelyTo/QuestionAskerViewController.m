@@ -15,12 +15,13 @@
 @interface QuestionAskerViewController () <UIAlertViewDelegate, ResetQuestion>
 
 
-@property (weak, nonatomic) IBOutlet UIImageView *backgroundView;
+@property (weak, nonatomic) UIImageView *backgroundView;
 @property (strong, nonatomic) NSString *backgroundImageName;
 @property (weak, nonatomic) IBOutlet UIImageView *questionView;
 @property (strong, nonatomic) NSArray *questions;
 @property (strong, nonatomic) NSString *questionImageName;
 @property (strong, nonatomic) FacebookBrain *brainInstance;
+@property (strong, nonatomic) UIImageView *logo;
 
 @end
 
@@ -77,6 +78,40 @@
     return ([DataController dc].facebookRefreshCounter == 25) ? YES : NO;
 }
 
+
+- (UIImageView *)makeLogoView {
+    
+    UIImage *logoImage = [UIImage imageNamed:@"logoLoginScreen"];
+    CGFloat width = 66;
+    CGFloat height = 114;
+    CGFloat x = self.view.frame.size.width/2 - width/2;
+    CGFloat y = 56;
+    
+    if (self.view.frame.size.height > 500) {
+        y = 110;
+    }
+    
+    CGRect frame = CGRectMake(x, y, width, height);
+    
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:frame];
+    imageView.image = logoImage;
+    
+    return imageView;
+}
+
+- (UIImageView *)makeColoredBackground {
+    
+    CGFloat width = self.view.frame.size.width - 10;
+    CGFloat height = self.view.frame.size.height - 10;
+    CGFloat x = 5;
+    CGFloat y = 5;
+    CGRect frame = CGRectMake(x, y, width, height);
+    
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:frame];
+    
+    return imageView;
+}
+
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
@@ -94,6 +129,13 @@
     self.navigationController.navigationBar.hidden = YES;
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
     [self prepareGestureRecognizers];
+   
+    self.logo = [self makeLogoView];
+    [self.view addSubview:self.logo];
+    
+    self.backgroundView = [self makeColoredBackground];
+    [self.view addSubview:self.backgroundView];
+    [self.view sendSubviewToBack:self.backgroundView];
     [self prepareNewView:nil];
 }
 

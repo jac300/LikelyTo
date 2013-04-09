@@ -280,27 +280,14 @@
    
     Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
     
-    //make detail label
-//    CGFloat width = cell.bounds.size.width;
-//    CGFloat height = cell.bounds.size.height/4;
-//    CGFloat x = 52;
-//    CGFloat y = cell.bounds.size.height * 3/4;
-//    CGRect labelFrame = CGRectMake(x, y, width, height);
-//    UILabel *detailLabel = [[UILabel alloc]initWithFrame:labelFrame];
-//    detailLabel.textColor = [UIColor lightGrayColor];
-//    detailLabel.font = [detailLabel.font fontWithSize:12];
-//    detailLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount];
-//    [cell addSubview:detailLabel];
-    
     //get the managed object that is on each row
     cell.textLabel.text = friend.name;
-    cell.textLabel.font = [cell.textLabel.font fontWithSize:20];
+    cell.textLabel.font = [UIFont boldSystemFontOfSize:20];
     
     cell.detailTextLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount];
-    cell.detailTextLabel.font = [cell.detailTextLabel.font fontWithSize:12];
-    
+    cell.detailTextLabel.font =  [UIFont systemFontOfSize:14];
 
-    cell.detailTextLabel.textColor = [UIColor lightGrayColor];
+    cell.detailTextLabel.textColor = [UIColor grayColor];
     
     [self.spinner stopAnimating];
     cell.imageView.image = [UIImage imageNamed:@"icon57x57"];
@@ -348,9 +335,7 @@
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-     NSLog(@"I am being called");
-    [self performSegueWithIdentifier:@"detailsView" sender:self];
-   
+    [self performSegueWithIdentifier:@"detailsView" sender:self];   
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
@@ -428,7 +413,6 @@
 {
     if ([segue.identifier isEqualToString:@"detailsView"]){
         
-    //NSIndexPath *indexPath = [self.tableView indexPathForCell:sender];
     NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
     Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
     

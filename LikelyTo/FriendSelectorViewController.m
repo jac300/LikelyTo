@@ -17,19 +17,19 @@
 
 @interface FriendSelectorViewController () <FacebookCallHandler>
 
-@property (weak, nonatomic) IBOutlet UIImageView *backgroundView;
+@property (strong, nonatomic) UIImageView *backgroundView;
 @property (weak, nonatomic) UIImageView *friendOneView; //delete
 @property (weak, nonatomic) UIImageView *friendTwoView; //delete
 @property (weak, nonatomic) UIImageView *friendThreeView; //delete
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *topView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *middleView;
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *bottomView;
-@property (weak, nonatomic) IBOutlet UILabel *firstFriendLabel;
-@property (weak, nonatomic) IBOutlet UILabel *secondFriendLabel;
-@property (weak, nonatomic) IBOutlet UILabel *thirdFriendLabel;
-@property (weak, nonatomic) IBOutlet UIButton *topButton;
-@property (weak, nonatomic) IBOutlet UIButton *middleButton;
-@property (weak, nonatomic) IBOutlet UIButton *bottomButton;
+@property (strong, nonatomic) UIActivityIndicatorView *topView;
+@property (strong, nonatomic) UIActivityIndicatorView *middleView;
+@property (strong, nonatomic) UIActivityIndicatorView *bottomView;
+@property (strong, nonatomic) UILabel *firstFriendLabel;
+@property (strong, nonatomic) UILabel *secondFriendLabel;
+@property (strong, nonatomic) UILabel *thirdFriendLabel;
+@property (strong, nonatomic) UIButton *topButton;
+@property (strong, nonatomic) UIButton *middleButton;
+@property (strong, nonatomic) UIButton *bottomButton;
 
 @property (nonatomic) int randomIndex1;
 @property (nonatomic) int randomIndex2;
@@ -122,7 +122,7 @@
     if (self.view.frame.size.height <= 480) {
         switch (viewNumber) {
             case 1:
-                y = 21;
+                y = 27; 
                 self.topButton.enabled = YES;
                 break;
             case 2:
@@ -138,11 +138,11 @@
     } else if (self.view.frame.size.height > 480) {
         switch (viewNumber) {
             case 1:
-                y = 30;
+                y = 34; 
                 self.topButton.enabled = YES;
                 break;
             case 2:
-                y = 192;
+                y = 190;
                 self.middleButton.enabled = YES;
                 break;
             case 3:
@@ -327,19 +327,13 @@
         
     self.firstFriendName = [[[DataController dc].friendsNotChosen objectAtIndex:0]objectForKey:FRIEND_NAME];
     self.firstFriendLabel.text = self.firstFriendName;
-    self.firstFriendLabel.TextAlignment = NSTextAlignmentCenter;
-    self.firstFriendLabel.TextColor = [UIColor whiteColor];
-        
+    
     self.secondFriendName = [[[DataController dc].friendsNotChosen objectAtIndex:1]objectForKey:FRIEND_NAME];
     self.secondFriendLabel.text = self.secondFriendName;
-    self.secondFriendLabel.TextAlignment = NSTextAlignmentCenter;
-    self.secondFriendLabel.TextColor = [UIColor whiteColor];
-        
+          
     self.thirdFriendName = [[[DataController dc].friendsNotChosen objectAtIndex:2]objectForKey:FRIEND_NAME];
     self.thirdFriendLabel.text = self.thirdFriendName;
-    self.thirdFriendLabel.TextAlignment = NSTextAlignmentCenter;
-    self.thirdFriendLabel.TextColor = [UIColor whiteColor];
-        
+
     }   else {
         [self.topView startAnimating];
         [self.middleView startAnimating];
@@ -360,6 +354,132 @@
         }
 }
 
+
+- (UIImageView *)makeColoredBackground {
+    
+    CGFloat width = self.view.frame.size.width - 10;
+    CGFloat height = self.view.frame.size.height - 10;
+    CGFloat x = 5;
+    CGFloat y = 5;
+    CGRect frame = CGRectMake(x, y, width, height);
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:frame];
+    
+    return imageView;
+}
+
+
+- (void)createWhiteFramesAndButtonsAndLabels {
+    
+    //white frame measurements
+    UIImage *whiteFrame = [UIImage imageNamed:@"whitePictureFrame"];
+    CGFloat x = 99;
+    CGFloat width = 134;
+    CGFloat height = 93;
+    
+    CGFloat yForTop = 21; 
+    CGFloat yForMiddle = 147;
+    CGFloat yForBottom = 276;
+    
+    if (self.view.frame.size.height > 500){
+        yForTop = 30; 
+        yForMiddle = 186;
+        yForBottom = 341;
+    }
+
+    //label measurements
+    CGFloat labelWidth = width*1.5;
+    CGFloat labelHeight = 20;
+    CGFloat labelX = self.view.center.x - labelWidth/2 + 8;
+    
+    //top frame
+    CGRect topRect = CGRectMake(x, yForTop, width, height);
+    UIImageView *topFrame = [[UIImageView alloc]initWithFrame:topRect];
+    topFrame.image = whiteFrame;
+    [self.view addSubview:topFrame];
+    [self.view sendSubviewToBack:topFrame];
+    
+    self.topView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    CGPoint topCenter = CGPointMake(width/2, (yForTop + height)/2.5);
+    self.topView.center = topCenter;
+    [topFrame addSubview:self.topView];
+    
+    self.topButton = [[UIButton alloc]initWithFrame:topRect];
+    self.topButton.tag = 1;
+    [self.topButton addTarget:self action:@selector(friendChosen:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.topButton];
+    
+    CGFloat labelYTop = yForTop + 7 + topFrame.frame.size.height;
+    if (self.view.frame.size.height > 500) {
+        labelYTop = yForTop + 15 + topFrame.frame.size.height;
+    }
+    
+    CGRect labelFrameForTop = CGRectMake(labelX, labelYTop, labelWidth, labelHeight);
+    self.firstFriendLabel = [[UILabel alloc]initWithFrame:labelFrameForTop];
+    self.firstFriendLabel.backgroundColor = [UIColor clearColor];
+    self.firstFriendLabel.TextAlignment = NSTextAlignmentCenter;
+    self.firstFriendLabel.TextColor = [UIColor whiteColor];
+    self.firstFriendLabel.font = [UIFont boldSystemFontOfSize:18];
+    [self.view addSubview:self.firstFriendLabel];
+    
+    //middle frame
+
+    CGRect middleRect = CGRectMake(x, yForMiddle, width, height);
+    UIImageView *middleFrame = [[UIImageView alloc]initWithFrame:middleRect];
+    middleFrame.image = whiteFrame;
+    [self.view addSubview:middleFrame];
+    [self.view sendSubviewToBack:middleFrame];
+    self.middleView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    CGPoint middleCenter = CGPointMake(width/2, (yForMiddle + height)/5.5);
+    self.middleView.center = middleCenter;
+    [middleFrame addSubview:self.middleView];
+    
+    self.middleButton = [[UIButton alloc]initWithFrame:middleRect];
+    self.middleButton.tag = 2;
+    [self.middleButton addTarget:self action:@selector(friendChosen:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.middleButton];
+    
+    CGFloat labelYMiddle = yForMiddle + 7 + middleFrame.frame.size.height;
+    if (self.view.frame.size.height > 500) {
+    labelYMiddle = yForMiddle + 15 + middleFrame.frame.size.height;
+    }
+    CGRect labelFrameForMiddle = CGRectMake(labelX, labelYMiddle, labelWidth, labelHeight);
+    self.secondFriendLabel = [[UILabel alloc]initWithFrame:labelFrameForMiddle];
+    self.secondFriendLabel.backgroundColor = [UIColor clearColor];
+    self.secondFriendLabel.TextAlignment = NSTextAlignmentCenter;
+    self.secondFriendLabel.TextColor = [UIColor whiteColor];
+    self.secondFriendLabel.font = [UIFont boldSystemFontOfSize:18];
+    [self.view addSubview:self.secondFriendLabel];
+    
+    //bottom frame
+    CGRect bottomRect = CGRectMake(x, yForBottom, width, height);
+    UIImageView *bottomFrame = [[UIImageView alloc]initWithFrame:bottomRect];
+    bottomFrame.image = whiteFrame;
+    [self.view addSubview:bottomFrame];
+    [self.view sendSubviewToBack:bottomFrame];
+    self.bottomView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    CGPoint bottomCenter = CGPointMake(width/2, (yForBottom + height)/8.5);
+    self.bottomView.center = bottomCenter;
+    [bottomFrame addSubview:self.bottomView];
+    
+    self.bottomButton = [[UIButton alloc]initWithFrame:bottomRect];
+    self.bottomButton.tag = 3;
+    [self.bottomButton addTarget:self action:@selector(friendChosen:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:self.bottomButton];
+    
+    CGFloat labelYBottom = yForBottom + 7 + bottomFrame.frame.size.height;
+    if (self.view.frame.size.height > 500) {
+    labelYBottom = yForBottom + 15 + bottomFrame.frame.size.height;
+    }
+    CGRect labelFrameForBottom = CGRectMake(labelX, labelYBottom, labelWidth, labelHeight);
+    self.thirdFriendLabel = [[UILabel alloc]initWithFrame:labelFrameForBottom];
+    self.thirdFriendLabel.backgroundColor = [UIColor clearColor];
+    self.thirdFriendLabel.TextAlignment = NSTextAlignmentCenter;
+    self.thirdFriendLabel.TextColor = [UIColor whiteColor];
+    self.thirdFriendLabel.font = [UIFont boldSystemFontOfSize:18];
+    [self.view addSubview:self.thirdFriendLabel];
+}
+
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -368,7 +488,13 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appClosed) name:@"AppDidCloseNotification" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appReopened) name:@"AppDidReopenNotification" object:nil];
     
+    [self createWhiteFramesAndButtonsAndLabels];
+    
+    self.backgroundView = [self makeColoredBackground];
+    [self.view addSubview:self.backgroundView];
+    [self.view sendSubviewToBack:self.backgroundView];
     [self.backgroundView setImage:[UIImage imageNamed:self.backgroundImageName]];
+    
     [self prepareGestureRecognizers];
     
     if (![DataController dc].facebookCachedPhotos) {
@@ -383,16 +509,7 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    self.backgroundView = nil;
-    self.friendOneView = nil;
-    self.friendTwoView = nil;
-    self.friendThreeView = nil;
-    self.topView = nil;
-    self.middleView = nil;
-    self.bottomView = nil;
-    self.firstFriendLabel = nil;
-    self.secondFriendLabel = nil;
-    self.thirdFriendLabel = nil;
+  
 }
 
 - (void)dealloc
@@ -419,7 +536,7 @@
 }
 
 #pragma button presses
-- (IBAction)friendChosen:(UIButton *)sender {
+- (void)friendChosen:(UIButton *)sender {
     self.savedResults = [[NSMutableArray alloc]init];
     self.imagesCropped = 0;
     

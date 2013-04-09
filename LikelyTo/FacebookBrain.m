@@ -94,6 +94,12 @@
                  // error.domain, error.code];
          }  else {
                 if ([self.delegate respondsToSelector:@selector(postCallBackTasks:)]) {
+                    [[[UIAlertView alloc] initWithTitle:@"Success!"
+                                                message:@"Game result was posted to your Timeline."
+                                               delegate:self
+                                      cancelButtonTitle:@"OK"
+                                      otherButtonTitles:nil]
+                     show];
                     [self.delegate postCallBackTasks:self];
                     // alertText = [NSString stringWithFormat:
                     //                          @"Posted action, id: %@",
@@ -103,12 +109,6 @@
              
             }
          
-     [[[UIAlertView alloc] initWithTitle:@"Success!"
-                                 message:@"Game result was posted to your Timeline."
-                                delegate:self
-                       cancelButtonTitle:@"OK"
-                       otherButtonTitles:nil]
-      show];
      }];
 }
 

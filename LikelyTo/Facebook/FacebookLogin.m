@@ -9,11 +9,11 @@
 
 @interface FacebookLogin ()
 
-@property (weak, nonatomic) IBOutlet UIButton *facebookConnectOrPlay;
+@property (weak, nonatomic) UIButton *facebookConnectOrPlay;
+@property (weak, nonatomic) UIButton *seeStatsButton;
 @property (weak, nonatomic) IBOutlet UIButton *gameInfo;
-@property (weak, nonatomic) IBOutlet UIImageView *logoView;
+@property (weak, nonatomic) UIImageView *logoView;
 @property (weak, nonatomic) IBOutlet UIImageView *infoTextView;
-@property (weak, nonatomic) IBOutlet UIButton *seeStatsButton;
 @property (nonatomic) BOOL infoViewIsVisible;
 
 @end
@@ -46,7 +46,7 @@
 }
 
 
-- (IBAction)facebookConnectOrPlay:(UIButton *)sender {
+- (void)facebookConnectOrPlay:(UIButton *)sender {
     AppDelegate *appDelegate =(AppDelegate *)[[UIApplication sharedApplication] delegate];
     if (FBSession.activeSession.isOpen) {
        [self performSegueWithIdentifier:@"playGame" sender:self];
@@ -54,6 +54,10 @@
     } else [appDelegate openSessionWithAllowLoginUI:YES];
 }
 
+- (void)seeStatsButtonAction:(UIButton *)sender {
+    
+    [self performSegueWithIdentifier:@"seeStatsFromLoginView" sender:self];
+}
 
 - (void)adjustPositionOfLogoViewforGameInfo: (UIView *)view
 {
@@ -110,6 +114,62 @@
         }];
 }
 
+-(UIButton *)makeFacebookConnectOrPlayButton {
+    
+    UIImage *buttonImage = [UIImage imageNamed:@"playButton4Login"];
+    
+    CGFloat width = buttonImage.size.width;
+    CGFloat height = buttonImage.size.height;
+    CGFloat x = self.view.frame.size.width/2 - width/2;
+    CGFloat y = self.view.frame.size.height * 1/2 + 50;
+    CGRect frame = CGRectMake(x, y, width, height);
+
+    UIButton *button = [[UIButton alloc]initWithFrame:frame];
+    
+    [button addTarget:self
+               action:@selector(facebookConnectOrPlay:)
+     forControlEvents:UIControlEventTouchUpInside];
+    
+    return button;
+}
+
+-(UIButton *)makeSeeStatsButton {
+    
+    UIImage *buttonImage = [UIImage imageNamed:@"seeStatsButton"];
+        
+    CGFloat width = 187; //buttonImage.size.width;
+    CGFloat height = 53; //buttonImage.size.height;
+    CGFloat x = self.view.frame.size.width/2 - width/2;
+    CGFloat y = self.view.frame.size.height * 1/2 + 57 + height;
+    CGRect frame = CGRectMake(x, y, width, height);
+    
+    UIButton *button = [[UIButton alloc]initWithFrame:frame];
+    [button setImage:buttonImage forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(seeStatsButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+            
+    return button;
+}
+
+- (UIImageView *)makeLogoView {
+    
+    UIImage *logoImage = [UIImage imageNamed:@"logoLoginScreen"];
+    CGFloat width = logoImage.size.width;
+    CGFloat height = logoImage.size.height;
+    CGFloat x = self.view.frame.size.width/2 - logoImage.size.width/2;
+    CGFloat y = 50;
+    
+    if (self.view.frame.size.height > 500) {
+        y = 100;
+    }
+    
+    CGRect frame = CGRectMake(x, y, width, height);
+    
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:frame];
+    imageView.image = logoImage;
+    
+    return imageView;
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -117,6 +177,11 @@
     self.navigationController.navigationBar.hidden = YES;
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
 
+    self.facebookConnectOrPlay = [self makeFacebookConnectOrPlayButton];
+    self.seeStatsButton = [self makeSeeStatsButton];
+    self.logoView = [self makeLogoView];
+    [self.view addSubview:self.logoView];
+  
     if (FBSession.activeSession.isOpen) {
     UIImage *image = [UIImage imageNamed:@"playButton4Login"];
     [self.facebookConnectOrPlay setImage:image forState:UIControlStateNormal];
@@ -125,7 +190,10 @@
             UIImage *image = [UIImage imageNamed:@"connectButton"];
             [self.facebookConnectOrPlay setImage:image forState:UIControlStateNormal];
             self.seeStatsButton.hidden = YES;
-            }
+        }
+    
+    [self.view addSubview:self.facebookConnectOrPlay];
+    [self.view addSubview:self.seeStatsButton];
     
     [[NSNotificationCenter defaultCenter]
      addObserver:self
