@@ -9,10 +9,10 @@
 
 @interface FacebookLogin ()
 
-@property (weak, nonatomic) UIButton *facebookConnectOrPlay;
-@property (weak, nonatomic) UIButton *seeStatsButton;
+@property (strong, nonatomic) UIButton *facebookConnectOrPlay;
+@property (strong, nonatomic) UIButton *seeStatsButton;
 @property (weak, nonatomic) IBOutlet UIButton *gameInfo;
-@property (weak, nonatomic) UIImageView *logoView;
+@property (strong, nonatomic) UIImageView *logoView;
 @property (weak, nonatomic) IBOutlet UIImageView *infoTextView;
 @property (nonatomic) BOOL infoViewIsVisible;
 
@@ -26,7 +26,8 @@
     if (FBSession.activeSession.isOpen) {
     UIImage *image = [UIImage imageNamed:@"playButton4Login"];
     [self.facebookConnectOrPlay setImage:image forState:UIControlStateNormal];
-    self.seeStatsButton.hidden = NO;
+    //self.seeStatsButton.hidden = NO;
+        [self.view addSubview:self.seeStatsButton];
     }  else {
         UIImage *image = [UIImage imageNamed:@"connectButton"];
         self.seeStatsButton.hidden = YES;
@@ -50,8 +51,10 @@
     AppDelegate *appDelegate =(AppDelegate *)[[UIApplication sharedApplication] delegate];
     if (FBSession.activeSession.isOpen) {
        [self performSegueWithIdentifier:@"playGame" sender:self];
-        //[appDelegate closeSession];
-    } else [appDelegate openSessionWithAllowLoginUI:YES];
+    } else {
+        [appDelegate openSessionWithAllowLoginUI:YES];
+         [self.view addSubview:self.seeStatsButton];
+    }
 }
 
 - (void)seeStatsButtonAction:(UIButton *)sender {
@@ -63,8 +66,14 @@
 {
     CGFloat x =  view.center.x;
     CGFloat y;
-    if (!self.infoViewIsVisible) y = view.center.y - (self.view.bounds.size.height *0.12);
-        else y = view.center.y + (self.view.bounds.size.height * 0.12);
+    CGFloat yOffset = 0.07;
+    
+    if (self.view.frame.size.height > 480) {
+        yOffset = 0.12;
+    }
+    
+    if (!self.infoViewIsVisible) y = view.center.y - (self.view.bounds.size.height *yOffset);
+        else y = view.center.y + (self.view.bounds.size.height * yOffset);
     view.center = CGPointMake(x, y);
 }
 
@@ -158,7 +167,7 @@
     CGFloat x = self.view.frame.size.width/2 - logoImage.size.width/2;
     CGFloat y = 50;
     
-    if (self.view.frame.size.height > 500) {
+    if (self.view.frame.size.height > 480) {
         y = 100;
     }
     
@@ -170,31 +179,32 @@
     return imageView;
 }
 
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
     self.navigationController.navigationBar.hidden = YES;
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
-
+    
     self.facebookConnectOrPlay = [self makeFacebookConnectOrPlayButton];
-    self.seeStatsButton = [self makeSeeStatsButton];
+    [self.view addSubview:self.facebookConnectOrPlay];
+    
     self.logoView = [self makeLogoView];
     [self.view addSubview:self.logoView];
-  
+    
+    self.seeStatsButton = [self makeSeeStatsButton];
+    
     if (FBSession.activeSession.isOpen) {
     UIImage *image = [UIImage imageNamed:@"playButton4Login"];
     [self.facebookConnectOrPlay setImage:image forState:UIControlStateNormal];
-    self.seeStatsButton.hidden = NO;
+    //self.seeStatsButton.hidden = NO;
+    [self.view addSubview:self.seeStatsButton];
     }   else {
             UIImage *image = [UIImage imageNamed:@"connectButton"];
             [self.facebookConnectOrPlay setImage:image forState:UIControlStateNormal];
-            self.seeStatsButton.hidden = YES;
+            //self.seeStatsButton.hidden = YES;
         }
-    
-    [self.view addSubview:self.facebookConnectOrPlay];
-    [self.view addSubview:self.seeStatsButton];
-    
+        
     [[NSNotificationCenter defaultCenter]
      addObserver:self
      selector:@selector(sessionStateChanged:)

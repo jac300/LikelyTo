@@ -52,7 +52,7 @@
 
 @end
 
-@implementation FriendSelectorViewController
+@implementation FriendSelectorViewController 
 
 # pragma - mark Lazy Instantiation of Properties
 - (UIAlertView *)connectionError

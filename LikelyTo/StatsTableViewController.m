@@ -18,7 +18,6 @@
 @property (nonatomic) BOOL beganUpdates;
 @property (strong, nonatomic) UIAlertView *savingError;
 @property (strong, nonatomic) UIActivityIndicatorView *spinner;
-
 @property (strong, nonatomic) UITableView *tableView;
 
 @end
@@ -37,13 +36,10 @@
 - (UIActivityIndicatorView *)makeSpinner
 {
     UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-    
     CGFloat x = self.view.bounds.size.width - 25;
     CGFloat y = self.view.bounds.origin.y + 20;
-    
     CGPoint center = CGPointMake(x, y);
     view.center = center;
-    
     view.hidesWhenStopped = YES;
     return view;
 }
@@ -53,11 +49,8 @@
 {
     NSArray *results;
     NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Friend"];
-    // request.predicate = don't specify to get all of the objects
     request.sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)]];
     self.fetchedResultsController = [[NSFetchedResultsController alloc]initWithFetchRequest:request managedObjectContext:[DataController dc].database.managedObjectContext sectionNameKeyPath:nil cacheName:nil];
-    //sectionNameKeyPath defines the name of each section
-
     NSError *error = nil;
     results = [[DataController dc].database.managedObjectContext
                             executeFetchRequest:request error:&error];
@@ -109,7 +102,6 @@
     } else {
         if (self.debug) NSLog(@"[%@ %@] no NSFetchedResultsController (yet?)", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
     }
-    //NSLog(@"The number of rows will be %i",[[[self.fetchedResultsController sections] objectAtIndex:0] numberOfObjects]);
     [self.tableView reloadData];
 }
 
@@ -247,13 +239,10 @@
 {
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage *buttonImage = [UIImage imageNamed:@"playButton"];
-    
     CGFloat width = buttonImage.size.width;
     CGFloat height = buttonImage.size.height;
-    
     CGFloat X = self.view.frame.size.width/2 - width/2;
     CGFloat Y = 1;
-    
     button.frame = CGRectMake(X, Y, width, height);
     [button setImage:buttonImage forState:UIControlStateNormal];
     [button addTarget:self
@@ -266,71 +255,24 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *CellIdentifier = @"newFriendCell";
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"newFriendCell"];
-
-    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
    // UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     
     if (cell == nil) {
         cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
     }
     
-    // try cacheing images if using FB thumbnail images of friends
-    //cells are re-used, so must change pic if cell is dismissed and re-used during scrolling before download completes
-   
     Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
-    
-    //get the managed object that is on each row
     cell.textLabel.text = friend.name;
     cell.textLabel.font = [UIFont boldSystemFontOfSize:20];
-    
     cell.detailTextLabel.text = [NSString stringWithFormat:@"%i Games", friend.gameCount];
     cell.detailTextLabel.font =  [UIFont systemFontOfSize:14];
-
     cell.detailTextLabel.textColor = [UIColor grayColor];
-    
-    [self.spinner stopAnimating];
     cell.imageView.image = [UIImage imageNamed:@"icon57x57"];
+    [self.spinner stopAnimating];
     
     return cell;
-    
-//    dispatch_queue_t downloadQueue = dispatch_queue_create("Get FB Friend", NULL);
-//    dispatch_async(downloadQueue, ^{
-    
-        //NSString *string4pic = friend.thumbnailPic;
-//        UIImage *image = [UIImage imageWithData:
-//                          [NSData dataWithContentsOfURL:
-//                           [NSURL URLWithString:string4pic]]];
-////        dispatch_async(dispatch_get_main_queue(), ^{
-            
-            //cell.imageView.image = image;
-    
-//        });
-//    });
-//    
-    
 }
-
-/*
-- (void)startImageFetchForFriend:(Friend*)friend
-{
-    
-    // Make asynchronous request and get image in block
-    [NSURLConnection sendAsynchronousRequest: [NSURL URLWithString:friend.thumbnailPic] queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error){
-        // Make sure eveything is ok
-        if(error){
-            // do something
-        }
-        
-        UIImage *image = [UIImage imageWithData:data];
-        
-        // Set the cache value as specified above, based on friend ID
-        
-        // Check to see if cell with friend.id is visible. If so, update just that cell's image view. (if you choose not to use the main operation queue, make sure this call happens on the main thread.
-        
-    }];
-}
-*/
 
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -368,9 +310,7 @@
     CGFloat width = self.view.frame.size.width;
     CGFloat height = self.view.frame.size.height - 50;
     CGRect tableFrame = CGRectMake(x, y, width, height);
-    
     UITableView *tableView = [[UITableView alloc]initWithFrame:tableFrame style:UITableViewStylePlain];
-    
     tableView.rowHeight = 45;
     tableView.sectionFooterHeight = 22;
     tableView.sectionHeaderHeight = 22;
@@ -378,7 +318,6 @@
     tableView.showsVerticalScrollIndicator = YES;
     tableView.userInteractionEnabled = YES;
     tableView.bounces = YES;
-    
     tableView.delegate = self;
     tableView.dataSource = self;
     
@@ -397,8 +336,8 @@
     UIButton *dismissButton = [self makeDismissButton];
     [self.view addSubview:dismissButton];
     self.tableView = [self makeTableView];
-    //[self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"newFriendCell"];
     [self.view addSubview:self.tableView];
+    //[self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"newFriendCell"];
 
 }
 
@@ -415,11 +354,6 @@
         
     NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
     Friend *friend = [self.fetchedResultsController objectAtIndexPath:indexPath];
-    
-    if (segue.destinationViewController) {
-    [segue.destinationViewController performSelector:@selector(setFriendName:) withObject:friend.name];
-    [segue.destinationViewController performSelector:@selector(setFriendImageName:) withObject:friend.bigPic];
-    }
     
     NSNumber *diary = [NSNumber numberWithInt:friend.diaryQ];
     NSNumber *island = [NSNumber numberWithInt:friend.islandQ];
@@ -459,6 +393,8 @@
     }
     
     if (segue.destinationViewController) {
+    [segue.destinationViewController performSelector:@selector(setFriendName:) withObject:friend.name];
+    [segue.destinationViewController performSelector:@selector(setFriendImageName:) withObject:friend.bigPic];
     [segue.destinationViewController performSelector:@selector(setNumericResults:) withObject:currentStatsForEditing];
     [segue.destinationViewController performSelector:@selector(setQuestionKeys:) withObject:keysForStatsForEditing];
     }

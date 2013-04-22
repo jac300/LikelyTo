@@ -15,7 +15,7 @@
 @interface QuestionAskerViewController () <UIAlertViewDelegate, ResetQuestion>
 
 
-@property (weak, nonatomic) UIImageView *backgroundView;
+@property (strong, nonatomic) UIImageView *backgroundView;
 @property (strong, nonatomic) NSString *backgroundImageName;
 @property (weak, nonatomic) IBOutlet UIImageView *questionView;
 @property (strong, nonatomic) NSArray *questions;
